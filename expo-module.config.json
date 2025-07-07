@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["ExpoRoomplanModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.roomplan.ExpoRoomplanModule"]
+  }
+}
