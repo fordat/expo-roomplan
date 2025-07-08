@@ -1,19 +1,16 @@
-import type { StyleProp, ViewStyle } from 'react-native';
+export enum ScanStatus {
+  NotStarted = 'NotStarted',
+  PermissionDenied = 'PermissionDenied',
+  Canceled = 'Canceled',
+  TimedOut = 'TimedOut',
+  Error = 'Error',
+  OK = 'OK',
+}
 
-export type OnLoadEventPayload = {
-  url: string;
-};
-
-export type ExpoRoomplanModuleEvents = {
-  onChange: (params: ChangeEventPayload) => void;
-};
-
-export type ChangeEventPayload = {
-  value: string;
-};
-
-export type ExpoRoomplanViewProps = {
-  url: string;
-  onLoad: (event: { nativeEvent: OnLoadEventPayload }) => void;
-  style?: StyleProp<ViewStyle>;
-};
+export interface ExpoRoomplanModuleType {
+  startCapture(scanName: string, apiToken?: string, apiURL?: string): Promise<void>;
+  stopCapture(): Promise<void>;
+  // test
+  addListener?(eventName: string, listener: (event: any) => void): { remove: () => void };
+  removeListeners?(count: number): void;
+}
