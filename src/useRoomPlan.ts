@@ -19,7 +19,7 @@ export interface UseRoomPlanInterface {
   roomScanStatus: ScanStatus;
 }
 
-export function useRoomplan(): UseRoomPlanInterface {
+export default function useRoomplan(): UseRoomPlanInterface {
   const [roomScanStatus, setRoomScanStatus] = useState<ScanStatus>(ScanStatus.NotStarted);
 
   useEffect(() => {

@@ -1,36 +1,37 @@
-import { useEvent } from 'expo';
-import ExpoRoomplan, { ExpoRoomplanView } from 'expo-roomplan';
+import ExpoRoomplan from 'expo-roomplan';
 import { Button, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { useRoomPlan } from 'expo-roomplan';
 
 export default function App() {
-  const onChangePayload = useEvent(ExpoRoomplan, 'onChange');
+  const {  } = ExpoRoomplan.startCapture("my_scan");
+
+  const { startRoomPlan, roomScanStatus } = useRoomPlan();
+
+
+  function handlePress() {
+
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container}>
         <Text style={styles.header}>Module API Example</Text>
-        <Group name="Constants">
+        {/* <Group name="Constants">
           <Text>{ExpoRoomplan.PI}</Text>
         </Group>
         <Group name="Functions">
           <Text>{ExpoRoomplan.hello()}</Text>
-        </Group>
+        </Group> */}
         <Group name="Async functions">
-          <Button
+          {/* <Button
             title="Set value"
             onPress={async () => {
               await ExpoRoomplan.setValueAsync('Hello from JS!');
             }}
-          />
-        </Group>
-        <Group name="Events">
-          <Text>{onChangePayload?.value}</Text>
-        </Group>
-        <Group name="Views">
-          <ExpoRoomplanView
-            url="https://www.example.com"
-            onLoad={({ nativeEvent: { url } }) => console.log(`Loaded: ${url}`)}
-            style={styles.view}
+          /> */}
+          <Button
+            title="Start RoomPlan"
+            onPress={handlePress}
           />
         </Group>
       </ScrollView>
