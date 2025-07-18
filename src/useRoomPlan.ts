@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import ExpoRoomplan from './ExpoRoomplanModule';
 import { ScanStatus, UseRoomPlanInterface, UseRoomPlanParams } from './ExpoRoomplan.types';
 
@@ -17,6 +18,9 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
   }, []);
 
   const startRoomPlan = async (scanName: string) => {
+    if (Platform.OS === "android") {
+      throw new Error("RoomPlan SDK only available on iOS.");
+    }
     try {
       // optional ExportType from params. defaults internally to "parametric"
       if (params?.exportType) {
@@ -26,7 +30,7 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
       }
     } catch (err) {
       console.error('startCapture failed:', err);
-      throw new Error('Unable to start room scan.');
+      throw err;
     }
   };
 
