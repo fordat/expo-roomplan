@@ -9,7 +9,7 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
   useEffect(() => {
     const sub = ExpoRoomPlan.addListener?.('onDismissEvent', (event: { value: ScanStatus }) => {
       setRoomScanStatus(event.value);
-      console.log("RoomScan status: ", event.value);
+      console.log('RoomScan status: ', event.value);
     });
 
     return () => {
@@ -18,11 +18,11 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
   }, []);
 
   const startRoomPlan = async (scanName: string) => {
-    if (Platform.OS === "android") {
-      throw new Error("RoomPlan SDK only available on iOS.");
+    if (Platform.OS === 'android') {
+      throw new Error('RoomPlan SDK only available on iOS.');
     }
     try {
-      // optional ExportType from params. defaults internally to "parametric"
+      // optional ExportType from params. defaults internally to 'parametric'
       if (params?.exportType) {
         await ExpoRoomPlan.startCapture(scanName, params.exportType);
       } else {
