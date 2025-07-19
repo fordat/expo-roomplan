@@ -11,7 +11,7 @@ export enum ExportType {
   Model = "MODEL",
 }
 
-export interface ExpoRoomplanModuleType {
+export interface ExpoRoomPlanModuleType {
   startCapture(scanName: string, exportType?: ExportType): Promise<void>;
   stopCapture(): Promise<void>;
   // test

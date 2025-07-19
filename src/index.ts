@@ -1,3 +1,3 @@
-export { default } from './ExpoRoomplanModule';
+export { default } from './ExpoRoomPlanModule';
 export { default as useRoomPlan } from "./useRoomPlan"; 
-export * from  './ExpoRoomplan.types';
+export * from  './ExpoRoomPlan.types';
