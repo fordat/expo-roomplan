@@ -382,14 +382,13 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
         roomCaptureView?.captureSession.run(
             configuration: roomCaptureSessionConfig
         )
-        // alter background on finish button
         UIView.transition(
-            with: finishButton,
+            with: cancelButton,
             duration: 0.5,
             options: .transitionCrossDissolve,
             animations: {
                 self.cancelButton.backgroundColor = UIColor.black
-                    .withAlphaComponent(0.6)  // make button background visible
+                    .withAlphaComponent(0)  // make button background invisible again
             },
             completion: nil
         )

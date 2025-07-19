@@ -1,5 +1,6 @@
 import { Button, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { useRoomPlan } from 'expo-roomplan';
+import React from 'react';
 
 export default function App() {
   const { startRoomPlan } = useRoomPlan();
@@ -28,7 +29,7 @@ export default function App() {
   );
 }
 
-function Group(props: { name: string; children: React.ReactNode }) {
+function Group(props: React.PropsWithChildren<{ name: string }>) {
   return (
     <View style={styles.group}>
       <Text style={styles.groupHeader}>{props.name}</Text>

@@ -2,11 +2,11 @@ import ExpoModulesCore
 import UIKit
 
 @available(iOS 17.0, *)
-public class ExpoRoomplanModule: Module {
+public class ExpoRoomPlanModule: Module {
   private var captureViewController: RoomPlanCaptureViewController?
 
   public func definition() -> ModuleDefinition {
-    Name("ExpoRoomplan")
+    Name("ExpoRoomPlan")
 
     Events("onDismissEvent")
 
