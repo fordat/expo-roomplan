@@ -9,12 +9,12 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
   const [jsonUrl, setJsonUrl] = useState<null | string>(null)
 
   useEffect(() => {
-    const sub = ExpoRoomPlan.addListener?.('onDismissEvent', (event: { status: ScanStatus, usdzUrl?: string, jsonUrl?: string }) => {
+    const sub = ExpoRoomPlan.addListener?.('onDismissEvent', (event: { status: ScanStatus, scanUrl?: string, jsonUrl?: string }) => {
       setRoomScanStatus(event.status);
       console.log('RoomScan status: ', event.status);
-      if (event.usdzUrl) {
-        setScanUrl(event.usdzUrl);
-        console.log('Scan URL: ', event.usdzUrl);
+      if (event.scanUrl) {
+        setScanUrl(event.scanUrl);
+        console.log('Scan URL: ', event.scanUrl);
       }
       if (event.jsonUrl) {
         setJsonUrl(event.jsonUrl);
@@ -34,8 +34,8 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
     try {
       // ExportType: defaults internally to 'parametric'
       // Model file location is not returned by default.
-      const exportType = params.exportType ?? ExportType.Parametric;
-      const sendFileLoc = params.sendFileLoc ?? false;
+      const exportType = params?.exportType ?? ExportType.Parametric;
+      const sendFileLoc = params?.sendFileLoc ?? false;
       ExpoRoomPlan.startCapture(scanName, exportType, sendFileLoc);
     } catch (err) {
       console.error('startCapture failed:', err);
