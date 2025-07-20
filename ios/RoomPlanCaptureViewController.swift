@@ -21,6 +21,7 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
 
     var scanName: String?
     var exportType: String?
+    var sendFileLoc: Bool?
     var capturedRoomArray: [CapturedRoom] = []
 
     // UI elements
@@ -319,9 +320,11 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
 
                 // reset finalStructure before sending data
                 finalStructure = nil
+                
+                let shouldSendFileLoc = sendFileLoc ?? false
 
-                if (sendFileLoc) {
-                    self.sendScanResultAndDismiss(status: .OK, scanUrl: destinationURL, jsonUrl: capturedRoomURL)
+                if (shouldSendFileLoc) {
+                    self.sendScanResultAndDismiss(status: .OK, scanUrl: destinationURL.absoluteString, jsonUrl: capturedRoomURL.absoluteString)
                     return
                 }
 

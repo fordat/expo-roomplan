@@ -11,12 +11,14 @@ public class ExpoRoomPlanModule: Module {
         Events("onDismissEvent")
 
         AsyncFunction("startCapture") {
-            (scanName: String, exportType: String?) in
+            (scanName: String, options: CaptureOptions?) in
             DispatchQueue.main.async {
                 let captureVC = RoomPlanCaptureViewController()
-                captureVC.exportType = exportType
+
                 captureVC.scanName = scanName
                 captureVC.modalPresentationStyle = .fullScreen
+                captureVC.exportType = options?.exportType
+                captureVC.sendFileLoc = options?.sendFileLoc ?? false
 
                 captureVC.onDismiss = { eventData in
                     self.sendEvent("onDismissEvent", eventData)

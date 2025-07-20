@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import ExpoRoomPlan from './ExpoRoomPlanModule';
-import { ScanStatus, UseRoomPlanInterface, UseRoomPlanParams } from './ExpoRoomPlan.types';
+import { CaptureOptions, ScanStatus, UseRoomPlanInterface } from './ExpoRoomPlan.types';
 
-export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInterface {
+export default function useRoomPlan(options?: CaptureOptions): UseRoomPlanInterface {
   const [roomScanStatus, setRoomScanStatus] = useState<ScanStatus>(ScanStatus.NotStarted);
   const [scanUrl, setScanUrl] = useState<null | string>(null)
   const [jsonUrl, setJsonUrl] = useState<null | string>(null)
@@ -32,10 +32,11 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
       throw new Error('RoomPlan SDK only available on iOS.');
     }
     try {
-      // optional ExportType from params. defaults internally to 'parametric'
-      if (params?.exportType) {
-        await ExpoRoomPlan.startCapture(scanName, params.exportType);
-      } else {
+      // ExportType: defaults internally to 'parametric'
+      // Model file location is not returned by default.
+      if (options?.exportType || options?.sendFileLoc) {
+        await ExpoRoomPlan.startCapture(scanName, options);
+      } else if (options?.sendFileLoc) {
         await ExpoRoomPlan.startCapture(scanName);
       }
     } catch (err) {
