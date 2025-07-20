@@ -5,11 +5,21 @@ import { ScanStatus, UseRoomPlanInterface, UseRoomPlanParams } from './ExpoRoomP
 
 export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInterface {
   const [roomScanStatus, setRoomScanStatus] = useState<ScanStatus>(ScanStatus.NotStarted);
+  const [scanUrl, setScanUrl] = useState<null | string>(null)
+  const [jsonUrl, setJsonUrl] = useState<null | string>(null)
 
   useEffect(() => {
-    const sub = ExpoRoomPlan.addListener?.('onDismissEvent', (event: { value: ScanStatus }) => {
-      setRoomScanStatus(event.value);
-      console.log('RoomScan status: ', event.value);
+    const sub = ExpoRoomPlan.addListener?.('onDismissEvent', (event: { status: ScanStatus, usdzUrl?: string, jsonUrl?: string }) => {
+      setRoomScanStatus(event.status);
+      console.log('RoomScan status: ', event.status);
+      if (event.usdzUrl) {
+        setScanUrl(event.usdzUrl);
+        console.log('Scan URL: ', event.usdzUrl);
+      }
+      if (event.jsonUrl) {
+        setJsonUrl(event.jsonUrl);
+        console.log('JSON URL: ', event.jsonUrl);
+      }
     });
 
     return () => {
@@ -37,5 +47,7 @@ export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInte
   return {
     startRoomPlan,
     roomScanStatus,
+    scanUrl,
+    jsonUrl,
   };
 }

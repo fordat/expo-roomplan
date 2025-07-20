@@ -18,8 +18,8 @@ public class ExpoRoomPlanModule: Module {
                 captureVC.scanName = scanName
                 captureVC.modalPresentationStyle = .fullScreen
 
-                captureVC.onDismiss = { status in
-                    self.sendEvent("onDismissEvent", ["value": status.rawValue])
+                captureVC.onDismiss = { eventData in
+                    self.sendEvent("onDismissEvent", eventData)
                 }
 
                 guard

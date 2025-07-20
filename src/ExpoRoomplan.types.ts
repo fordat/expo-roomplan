@@ -22,6 +22,8 @@ export interface ExpoRoomPlanModuleType {
 export interface UseRoomPlanInterface {
   startRoomPlan: (scanName: string, exportType?: ExportType) => Promise<void>;
   roomScanStatus: ScanStatus;
+  jsonUrl: string;
+  scanUrl: string;
 }
 
 export interface UseRoomPlanParams {
