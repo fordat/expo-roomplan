@@ -392,35 +392,6 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
         }
     }
 
-    // func sendFileLocAndDismiss(url: String) {
-    //     onDismiss?(url)
-    //     let dismissAction = {
-    //         self.activityIndicator.stopAnimating()
-    //         self.dismiss(animated: true, completion: nil)
-    //     }
-    //     finalStructure = nil
-    //     DispatchQueue.main.async(execute: dismissAction)
-    // }
-
-    // func sendStatusAndDismiss(status: ScanStatus) {
-    //     onDismiss?(status)
-
-    //     let dismissAction = {
-    //         self.activityIndicator.stopAnimating()
-    //         self.dismiss(animated: true, completion: nil)
-    //     }
-
-    //     if status == .OK {
-    //         DispatchQueue.main.asyncAfter(
-    //             deadline: .now() + 0.5,
-    //             execute: dismissAction
-    //         )
-    //     } else {
-    //         finalStructure = nil
-    //         DispatchQueue.main.async(execute: dismissAction)
-    //     }
-    // }
-
     public func startSession() {
         print("[RoomPlan] starting session")
         roomCaptureView?.captureSession.run(

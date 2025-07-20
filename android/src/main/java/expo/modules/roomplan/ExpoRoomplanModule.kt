@@ -12,13 +12,13 @@ class ExpoRoomPlanModule : Module() {
     Name("ExpoRoomPlan")
 
     // Async function to start capture
-    AsyncFunction("startCapture") { scanName: String, exportType: String?, promise: Promise ->
-      promise.reject("NOT_IMPLEMENTED", "RoomPlan is not available to Android.")
+    AsyncFunction("startCapture") { scanName: String, exportType: String, sendFileLoc: Boolean, promise: Promise ->
+      promise.reject("NOT_IMPLEMENTED", "RoomPlan SDK is not available on Android.")
     }
 
     // Async function to stop capture
     AsyncFunction("stopCapture") { promise: Promise ->
-      promise.reject("NOT_IMPLEMENTED", "RoomPlan is not available to Android.")
+      promise.reject("NOT_IMPLEMENTED", "RoomPlan SDK is not available on Android.")
     }
   }
 }
