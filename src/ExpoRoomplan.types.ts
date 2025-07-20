@@ -11,13 +11,13 @@ export enum ExportType {
   Model = "MODEL",
 }
 
-export interface CaptureOptions {
+export interface UseRoomPlanParams {
   exportType?: ExportType,
   sendFileLoc?: boolean,
 }
 
 export interface ExpoRoomPlanModuleType {
-  startCapture(scanName: string, options?: CaptureOptions): Promise<void>;
+  startCapture(scanName: string, exportType: ExportType, sendFileLoc: boolean): Promise<void>;
   stopCapture(): Promise<void>;
   // test
   addListener?(eventName: string, listener: (event: any) => void): { remove: () => void };

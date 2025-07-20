@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import ExpoRoomPlan from './ExpoRoomPlanModule';
-import { CaptureOptions, ScanStatus, UseRoomPlanInterface } from './ExpoRoomPlan.types';
+import { UseRoomPlanParams, ScanStatus, UseRoomPlanInterface, ExportType } from './ExpoRoomPlan.types';
 
-export default function useRoomPlan(options?: CaptureOptions): UseRoomPlanInterface {
+export default function useRoomPlan(params?: UseRoomPlanParams): UseRoomPlanInterface {
   const [roomScanStatus, setRoomScanStatus] = useState<ScanStatus>(ScanStatus.NotStarted);
   const [scanUrl, setScanUrl] = useState<null | string>(null)
   const [jsonUrl, setJsonUrl] = useState<null | string>(null)
@@ -34,11 +34,9 @@ export default function useRoomPlan(options?: CaptureOptions): UseRoomPlanInterf
     try {
       // ExportType: defaults internally to 'parametric'
       // Model file location is not returned by default.
-      if (options?.exportType || options?.sendFileLoc) {
-        await ExpoRoomPlan.startCapture(scanName, options);
-      } else if (options?.sendFileLoc) {
-        await ExpoRoomPlan.startCapture(scanName);
-      }
+      const exportType = params.exportType ?? ExportType.Parametric;
+      const sendFileLoc = params.sendFileLoc ?? false;
+      ExpoRoomPlan.startCapture(scanName, exportType, sendFileLoc);
     } catch (err) {
       console.error('startCapture failed:', err);
       throw err;
