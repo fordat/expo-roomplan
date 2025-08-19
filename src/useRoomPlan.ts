@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
-import ExpoRoomPlan from "./ExpoRoomPlanModule";
+import ExpoRoomPlan from "./ExpoRoomplanModule";
 import {
   UseRoomPlanParams,
   ScanStatus,
   UseRoomPlanInterface,
   ExportType,
-} from "./ExpoRoomPlan.types";
+} from "./ExpoRoomplan.types";
 
 export default function useRoomPlan(
   params?: UseRoomPlanParams
