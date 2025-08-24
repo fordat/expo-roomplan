@@ -1,10 +1,13 @@
 {
   "platforms": ["ios", "android", "web"],
   "ios": {
-    "modules": ["ExpoRoomPlanModule"]
+    "modules": ["ExpoRoomPlanModule", "ExpoRoomPlanViewModule"]
   },
   "android": {
-    "modules": ["expo.modules.roomplan.ExpoRoomPlanModule"]
+    "modules": [
+      "expo.modules.roomplan.ExpoRoomPlanModule",
+      "expo.modules.roomplan.ExpoRoomPlanViewModule"
+    ]
   },
   "newArchEnabled": true
 }
