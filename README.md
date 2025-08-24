@@ -6,11 +6,18 @@ Read more about it here: [Apple - RoomPlan](https://developer.apple.com/augmente
 
 # Usage
 
-Choose how you want to integrate RoomPlan based on your UI needs: use the [RoomPlanProvider](#roomplanprovider) with its [RoomPlanViewConsumer](#roomplanprovider) for cross‑tree, context‑based control; the [useRoomPlanView](#useroomplanview) hook for local, component‑scoped control; the direct [RoomPlanView](#roomplanview) component if you prefer driving everything via props; or the original [useRoomPlan](#useroomplan) flow. For most apps, the Provider/Consumer or the hook is the easiest path, offering the greatest customisability and flexibility.
+- [RoomPlanProvider](#roomplanprovider) with its [RoomPlanViewConsumer](#roomplanprovider) for cross‑tree, context‑based control.
+
+- [useRoomPlanView](#useroomplanview) - hook for local, component‑scoped control.
+
+- [RoomPlanView](#roomplanview) - embeddable component driven by props.
+
+- [useRoomPlan](#useroomplan) - get up and running quickly with a pre-built view controller.
+
 
 ## useRoomPlan
 
-The best way to use this package is with the `useRoomPlan` hook:
+The simplest way to use this package is with the `useRoomPlan` hook:
 
 ```
 const { startRoomPlan } = useRoomPlan();
@@ -391,8 +398,10 @@ Only compatible with iOS 17.0 or higher.
 
 Run `npx pod-install` after installing the npm package.
 
-Replace `YOUR_TEAM_ID` with a real development team.
-
 # Contributing
 
 Contributions are very welcome! Please refer to guidelines described in the [contributing guide](https://github.com/expo/expo#contributing).
+
+### Development Notes
+
+Replace `YOUR_TEAM_ID` with a real development team in the example project.
