@@ -5,7 +5,7 @@ import RealityKit
 import RoomPlan
 import UIKit
 
-@available(iOS 17.0, *)
+@available(iOS 16.0, *)
 class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
     RoomCaptureSessionDelegate
 {
@@ -14,9 +14,15 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
         RoomCaptureSession.Configuration()
     private var isSessionRunning: Bool = false
 
+    // Populated via the RoomCaptureViewDelegate review flow. This is the only
+    // source of the final room on iOS 16, where RoomBuilder/StructureBuilder
+    // don't exist; on iOS 17+ it's unused since we build from capturedRoomArray.
     private var finalResults: CapturedRoom?
+
+    @available(iOS 17.0, *)
     private var finalStructure: CapturedStructure?
-    private let structureBuilder = StructureBuilder(options: [.beautifyObjects])
+    @available(iOS 17.0, *)
+    private lazy var structureBuilder = StructureBuilder(options: [.beautifyObjects])
 
     var onDismiss: (([String: Any]) -> Void)?
 
@@ -48,6 +54,14 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
     private func setupRoomCaptureView() {
         roomCaptureView = RoomCaptureView(frame: view.bounds)
         roomCaptureView?.captureSession.delegate = self
+        // On iOS 17+, rooms are built from raw CapturedRoomData via RoomBuilder
+        // (see captureSession(_:didEndWith:) below), so the view-level review
+        // delegate is left unset to avoid double-presenting RoomPlan's own UI.
+        // On iOS 16, RoomBuilder doesn't exist, so we rely on RoomPlan's built-in
+        // review flow and capture the finished room via captureView(didPresent:).
+        if #unavailable(iOS 17.0) {
+            roomCaptureView?.delegate = self
+        }
         view.insertSubview(roomCaptureView, at: 0)
 
         setupButtons()
@@ -130,6 +144,13 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
     }
 
     private func setupPostScanUI() {
+        let supportsAddAnotherRoom: Bool
+        if #available(iOS 17.0, *) {
+            supportsAddAnotherRoom = true
+        } else {
+            supportsAddAnotherRoom = false
+        }
+
         // initialize and set up the export button
         exportButton = UIButton()
         exportButton.translatesAutoresizingMaskIntoConstraints = false
@@ -152,33 +173,36 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
             for: .touchUpInside
         )
 
-        // initialize and set up the "anotherScan" button
-        anotherScanButton = UIButton()
-        anotherScanButton.translatesAutoresizingMaskIntoConstraints = false
-        anotherScanButton.setTitleColor(.white, for: .normal)
-        anotherScanButton.backgroundColor = UIColor.black.withAlphaComponent(
-            0.6
-        )
-        anotherScanButton.titleLabel?.textAlignment = .center
-        anotherScanButton.titleLabel?.numberOfLines = 0
-        anotherScanButton.titleLabel?.font = UIFont.systemFont(
-            ofSize: 16,
-            weight: .bold
-        )
-        anotherScanButton.setTitle("Add Another Room to Scan", for: .normal)  // text
-        // round corners
-        anotherScanButton.layer.masksToBounds = true
-        anotherScanButton.layer.cornerRadius = 15
+        var stackedButtons: [UIButton] = [exportButton]
 
-        anotherScanButton.addTarget(
-            self,
-            action: #selector(restartSession),
-            for: .touchUpInside
-        )
+        if supportsAddAnotherRoom {
+            anotherScanButton = UIButton()
+            anotherScanButton.translatesAutoresizingMaskIntoConstraints = false
+            anotherScanButton.setTitleColor(.white, for: .normal)
+            anotherScanButton.backgroundColor = UIColor.black.withAlphaComponent(
+                0.6
+            )
+            anotherScanButton.titleLabel?.textAlignment = .center
+            anotherScanButton.titleLabel?.numberOfLines = 0
+            anotherScanButton.titleLabel?.font = UIFont.systemFont(
+                ofSize: 16,
+                weight: .bold
+            )
+            anotherScanButton.setTitle("Add Another Room to Scan", for: .normal)  // text
+            // round corners
+            anotherScanButton.layer.masksToBounds = true
+            anotherScanButton.layer.cornerRadius = 15
 
-        let buttonStack = UIStackView(arrangedSubviews: [
-            exportButton, anotherScanButton,
-        ])
+            anotherScanButton.addTarget(
+                self,
+                action: #selector(restartSession),
+                for: .touchUpInside
+            )
+
+            stackedButtons.append(anotherScanButton)
+        }
+
+        let buttonStack = UIStackView(arrangedSubviews: stackedButtons)
         buttonStack.axis = .vertical
         buttonStack.spacing = 16
         buttonStack.distribution = .fillEqually
@@ -198,10 +222,16 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
         )
         // Keep Finish active; it will now confirm exit when no session is running.
 
-        NSLayoutConstraint.activate([
-            exportButton.heightAnchor.constraint(equalToConstant: 50),
-            anotherScanButton.heightAnchor.constraint(equalToConstant: 50),
+        var buttonConstraints = [
+            exportButton.heightAnchor.constraint(equalToConstant: 50)
+        ]
+        if supportsAddAnotherRoom {
+            buttonConstraints.append(
+                anotherScanButton.heightAnchor.constraint(equalToConstant: 50)
+            )
+        }
 
+        NSLayoutConstraint.activate(buttonConstraints + [
             buttonStack.leadingAnchor.constraint(
                 equalTo: view.leadingAnchor,
                 constant: 20
@@ -237,14 +267,16 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
         )
         // Also disable Finish to avoid exiting mid-export
         finishButton.isEnabled = false
-        anotherScanButton.isEnabled = false
-        anotherScanButton.removeTarget(
-            self,
-            action: #selector(restartSession),
-            for: .touchUpInside
-        )
+        if let anotherScanButton {
+            anotherScanButton.isEnabled = false
+            anotherScanButton.removeTarget(
+                self,
+                action: #selector(restartSession),
+                for: .touchUpInside
+            )
+        }
         UIView.animate(withDuration: 0.5) {
-            self.anotherScanButton.backgroundColor = UIColor.white
+            self.anotherScanButton?.backgroundColor = UIColor.white
             self.exportButton.backgroundColor = UIColor.white
         }
 
@@ -291,17 +323,13 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
 
         Task {
             do {
-                finalStructure = try await structureBuilder.capturedStructure(
-                    from: capturedRoomArray
-                )
-
                 try FileManager.default.createDirectory(
                     at: destinationFolderURL,
                     withIntermediateDirectories: true
                 )
-                
+
                 var finalExportType = CapturedRoom.USDExportOptions.parametric;
-                
+
                 if (exportType == "MESH") {
                     finalExportType = CapturedRoom.USDExportOptions.mesh;
                 } else if (exportType == "MODEL") {
@@ -309,16 +337,39 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
                 }
 
                 let jsonEncoder = JSONEncoder()
-                let jsonData = try jsonEncoder.encode(finalStructure)
-                try jsonData.write(to: capturedRoomURL)
-                try finalStructure?.export(
-                    to: destinationURL,
-                    exportOptions: finalExportType
-                )
 
-                // reset finalStructure before sending data
-                finalStructure = nil
-                
+                if #available(iOS 17.0, *) {
+                    finalStructure = try await structureBuilder.capturedStructure(
+                        from: capturedRoomArray
+                    )
+
+                    let jsonData = try jsonEncoder.encode(finalStructure)
+                    try jsonData.write(to: capturedRoomURL)
+                    try finalStructure?.export(
+                        to: destinationURL,
+                        exportOptions: finalExportType
+                    )
+
+                    finalStructure = nil
+                } else {
+                    guard let room = finalResults else {
+                        throw NSError(
+                            domain: "ExpoRoomPlan",
+                            code: 1,
+                            userInfo: [
+                                NSLocalizedDescriptionKey: "No captured room available to export."
+                            ]
+                        )
+                    }
+
+                    let jsonData = try jsonEncoder.encode(room)
+                    try jsonData.write(to: capturedRoomURL)
+                    try room.export(
+                        to: destinationURL,
+                        exportOptions: finalExportType
+                    )
+                }
+
                 let shouldSendFileLoc = sendFileLoc ?? false
 
                 if (shouldSendFileLoc) {
@@ -385,7 +436,9 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
                 execute: dismissAction
             )
         } else {
-            finalStructure = nil
+            if #available(iOS 17.0, *) {
+                finalStructure = nil
+            }
             DispatchQueue.main.async(execute: dismissAction)
         }
     }
@@ -401,7 +454,7 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
     @IBAction func restartSession() {
         print("[RoomPlan] restarting session")
         exportButton.removeFromSuperview()
-        anotherScanButton.removeFromSuperview()
+        anotherScanButton?.removeFromSuperview()
         roomCaptureView?.captureSession.run(
             configuration: roomCaptureSessionConfig
         )
@@ -464,8 +517,9 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
 
         let confirmAction = UIAlertAction(title: "Confirm", style: .destructive)
         { action in
-            // reset final structure on cancel
-            self.finalStructure = nil
+            if #available(iOS 17.0, *) {
+                self.finalStructure = nil
+            }
             self.sendScanResultAndDismiss(status: .Canceled)
         }
         alertController.addAction(confirmAction)
@@ -518,7 +572,7 @@ extension RoomPlanCaptureViewController {
     }
 }
 
-@available(iOS 17.0, *)
+@available(iOS 16.0, *)
 extension RoomPlanCaptureViewController {
     func captureView(
         shouldPresent roomDataForProcessing: CapturedRoomData,

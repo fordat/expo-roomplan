@@ -2,7 +2,7 @@ import ExpoModulesCore
 import UIKit
 import RoomPlan
 
-@available(iOS 17.0, *)
+@available(iOS 16.0, *)
 public class ExpoRoomPlanViewModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoRoomPlanView")

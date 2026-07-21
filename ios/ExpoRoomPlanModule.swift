@@ -1,7 +1,7 @@
 import ExpoModulesCore
 import UIKit
 
-@available(iOS 17.0, *)
+@available(iOS 16.0, *)
 public class ExpoRoomPlanModule: Module {
     private var captureViewController: RoomPlanCaptureViewController?
 

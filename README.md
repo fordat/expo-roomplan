@@ -390,11 +390,11 @@ Add this to your `expo-module.config.json`:
 
 ### Configure for Android
 
-Only compatible with iOS 17.0 or higher.
+Only compatible with iOS 16.0 or higher.
 
 ### Configure for iOS
 
-Only compatible with iOS 17.0 or higher.
+Requires iOS 16.0 or higher. Multi-room capture (merging several scans into one structure via "add another room") requires iOS 17.0+; on iOS 16 devices, capture is limited to a single room per session.
 
 Run `npx pod-install` after installing the npm package.
 
