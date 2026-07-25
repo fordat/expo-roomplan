@@ -487,7 +487,11 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
 
     @objc
     public func stopSession() {
-        roomCaptureView?.captureSession.stop(pauseARSession: false)
+        if #available(iOS 17.0, *) {
+            roomCaptureView?.captureSession.stop(pauseARSession: false)
+        } else {
+            roomCaptureView?.captureSession.stop()
+        }
         isSessionRunning = false
         setupPostScanUI()
     }

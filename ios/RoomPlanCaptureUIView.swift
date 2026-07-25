@@ -92,7 +92,11 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
   roomCaptureView.captureSession.run(configuration: configuration)
       }
     } else {
-      roomCaptureView.captureSession.stop(pauseARSession: false)
+      if #available(iOS 17.0, *) {
+        roomCaptureView.captureSession.stop(pauseARSession: false)
+      } else {
+        roomCaptureView.captureSession.stop()
+      }
     }
   }
 
@@ -123,7 +127,11 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
     lastFinishTrigger = trigger
   // Stop capturing to finalize current room; preview will be presented by RoomPlan
   pendingFinish = true
-    roomCaptureView.captureSession.stop(pauseARSession: false)
+    if #available(iOS 17.0, *) {
+      roomCaptureView.captureSession.stop(pauseARSession: false)
+    } else {
+      roomCaptureView.captureSession.stop()
+    }
   }
 
   // Restart session to accumulate another room like the controller-based flow
