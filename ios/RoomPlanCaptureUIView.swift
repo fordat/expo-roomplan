@@ -20,8 +20,16 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
   var exportOnFinish: Bool = true
 
   private var capturedRooms: [CapturedRoom] = []
+  private var _structureBuilder: Any?
   @available(iOS 17.0, *)
-  private lazy var structureBuilder = StructureBuilder(options: [.beautifyObjects])
+  private var structureBuilder: StructureBuilder {
+    if let existing = _structureBuilder as? StructureBuilder {
+      return existing
+    }
+    let builder = StructureBuilder(options: [.beautifyObjects])
+    _structureBuilder = builder
+    return builder
+  }
   private var finalRoom: CapturedRoom?
   private var isRunning: Bool = false
   private var lastExportTrigger: Double? = nil

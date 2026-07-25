@@ -19,10 +19,22 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
     // don't exist; on iOS 17+ it's unused since we build from capturedRoomArray.
     private var finalResults: CapturedRoom?
 
+    private var _finalStructure: Any?
     @available(iOS 17.0, *)
-    private var finalStructure: CapturedStructure?
+    private var finalStructure: CapturedStructure? {
+        get { _finalStructure as? CapturedStructure }
+        set { _finalStructure = newValue }
+    }
+    private var _structureBuilder: Any?
     @available(iOS 17.0, *)
-    private lazy var structureBuilder = StructureBuilder(options: [.beautifyObjects])
+    private var structureBuilder: StructureBuilder {
+        if let existing = _structureBuilder as? StructureBuilder {
+            return existing
+        }
+        let builder = StructureBuilder(options: [.beautifyObjects])
+        _structureBuilder = builder
+        return builder
+    }
 
     var onDismiss: (([String: Any]) -> Void)?
 
