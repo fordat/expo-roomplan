@@ -296,7 +296,11 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
             self.exportButton.backgroundColor = UIColor.white
         }
 
-        roomCaptureView?.captureSession.stop()
+        if #available(iOS 17.0, *) {
+          roomCaptureView?.captureSession.stop(pauseARSession: false)
+        } else {
+          roomCaptureView?.captureSession.stop()
+        }
 
         // create a white overlay view that covers the entire screen
         let overlayView = UIView(frame: self.view.bounds)
