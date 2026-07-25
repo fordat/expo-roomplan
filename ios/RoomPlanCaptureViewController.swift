@@ -42,6 +42,10 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
     var exportType: String?
     var sendFileLoc: Bool?
     var capturedRoomArray: [CapturedRoom] = []
+    // Tracks whether the RoomBuilder Task kicked off by captureSession(_:didEndWith:)
+    // is still running, so export can be deferred instead of racing it with a fixed timer.
+    private var isBuildingRoom = false
+    private var pendingExportAfterBuild = false
 
     // UI elements
     private let activityIndicator = UIActivityIndicatorView(style: .large)
@@ -304,7 +308,14 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
         self.view.insertSubview(overlayView, aboveSubview: roomCaptureView!)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.exportResults()
+            if self.isBuildingRoom {
+                // Last room's RoomBuilder Task hasn't finished appending to
+                // capturedRoomArray yet; defer export until it does instead of
+                // racing it and handing StructureBuilder an incomplete array.
+                self.pendingExportAfterBuild = true
+            } else {
+                self.exportResults()
+            }
         }
     }
 
@@ -575,6 +586,7 @@ extension RoomPlanCaptureViewController {
     ) {
         print("[RoomPlan] didEndWith")
         let roomBuilder = RoomBuilder(options: [.beautifyObjects])
+        isBuildingRoom = true
         Task {
             if let capturedRoom = try? await roomBuilder.capturedRoom(
                 from: didEndWith
@@ -583,6 +595,13 @@ extension RoomPlanCaptureViewController {
                 self.capturedRoomArray.append(capturedRoom)
             } else {
                 print("[RoomPlan] Failed to build captured room.")
+            }
+            await MainActor.run {
+                self.isBuildingRoom = false
+                if self.pendingExportAfterBuild {
+                    self.pendingExportAfterBuild = false
+                    self.exportResults()
+                }
             }
         }
     }
