@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.author         = package['author']
   s.homepage       = package['homepage']
   s.platforms      = {
-    :ios => '17.0'
+    :ios => '16.0'
   }
   s.swift_version  = '5.4'
   s.source         = { git: 'https://github.com/fordat/expo-roomplan' }
@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
     'DEFINES_MODULE' => 'YES',
   }
 
-  s.ios.deployment_target = '17.0'
+  s.ios.deployment_target = '16.0'
 
   # Explicitly link system frameworks used by RoomPlan
   s.frameworks = 'RoomPlan', 'RealityKit', 'ARKit'

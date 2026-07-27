@@ -4,7 +4,7 @@ import RoomPlan
 import ExpoModulesCore
 import AVFoundation
 
-@available(iOS 17.0, *)
+@available(iOS 16.0, *)
 class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureViewDelegate {
   private var roomCaptureView: RoomCaptureView!
   private let configuration = RoomCaptureSession.Configuration()
@@ -20,7 +20,17 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
   var exportOnFinish: Bool = true
 
   private var capturedRooms: [CapturedRoom] = []
-  private let structureBuilder = StructureBuilder(options: [.beautifyObjects])
+  private var _structureBuilder: Any?
+  @available(iOS 17.0, *)
+  private var structureBuilder: StructureBuilder {
+    if let existing = _structureBuilder as? StructureBuilder {
+      return existing
+    }
+    let builder = StructureBuilder(options: [.beautifyObjects])
+    _structureBuilder = builder
+    return builder
+  }
+  private var finalRoom: CapturedRoom?
   private var isRunning: Bool = false
   private var lastExportTrigger: Double? = nil
   private var lastFinishTrigger: Double? = nil
@@ -35,6 +45,9 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
     roomCaptureView = RoomCaptureView(frame: .zero)
     roomCaptureView.translatesAutoresizingMaskIntoConstraints = false
     roomCaptureView.captureSession.delegate = self
+    if #unavailable(iOS 17.0) {
+      roomCaptureView.delegate = self
+    }
     addSubview(roomCaptureView)
 
     NSLayoutConstraint.activate([
@@ -79,7 +92,11 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
   roomCaptureView.captureSession.run(configuration: configuration)
       }
     } else {
-      roomCaptureView.captureSession.stop(pauseARSession: false)
+      if #available(iOS 17.0, *) {
+        roomCaptureView.captureSession.stop(pauseARSession: false)
+      } else {
+        roomCaptureView.captureSession.stop()
+      }
     }
   }
 
@@ -88,8 +105,14 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
     guard let trigger else { return }
     if lastExportTrigger != trigger {
       lastExportTrigger = trigger
+      let hasCapturedRoom: Bool
+      if #available(iOS 17.0, *) {
+        hasCapturedRoom = !capturedRooms.isEmpty
+      } else {
+        hasCapturedRoom = finalRoom != nil
+      }
       // If nothing captured yet, queue export until capture ends
-      guard !capturedRooms.isEmpty else {
+      guard hasCapturedRoom else {
         pendingExport = true
         return
       }
@@ -104,7 +127,11 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
     lastFinishTrigger = trigger
   // Stop capturing to finalize current room; preview will be presented by RoomPlan
   pendingFinish = true
-    roomCaptureView.captureSession.stop(pauseARSession: false)
+    if #available(iOS 17.0, *) {
+      roomCaptureView.captureSession.stop(pauseARSession: false)
+    } else {
+      roomCaptureView.captureSession.stop()
+    }
   }
 
   // Restart session to accumulate another room like the controller-based flow
@@ -112,6 +139,10 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
     guard let trigger else { return }
     if lastAddAnotherTrigger == trigger { return }
     lastAddAnotherTrigger = trigger
+    guard #available(iOS 17.0, *) else {
+      sendError("Adding another room is only supported on iOS 17 and later.")
+      return
+    }
     // Ensure current session is stopped, then start again to capture the next room
   pendingFinish = false
   pendingExport = false
@@ -122,34 +153,41 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
     }
   }
 
+  private func handleRoomReady() {
+    // If finishing, emit preview now that the processed room exists
+    if self.pendingFinish && !self.previewEmitted {
+      self.onPreview([:])
+      self.previewEmitted = true
+      // If requested, export right after preview
+      if self.exportOnFinish {
+        self.exportResults()
+      }
+      self.pendingFinish = false
+    }
+    // If an export was queued, export now
+    if self.pendingExport {
+      self.pendingExport = false
+      self.exportResults()
+    } else {
+      self.sendStatus(.OK)
+    }
+  }
+
   // MARK: - RoomPlan delegates
   func captureSession(_ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: (any Error)?) {
     if let error {
       sendError(error.localizedDescription)
       return
     }
+    // RoomBuilder is iOS 17+ only; on iOS 16 the room is produced instead via
+    // RoomPlan's own review UI, delivered through captureView(didPresent:).
+    guard #available(iOS 17.0, *) else { return }
     let roomBuilder = RoomBuilder(options: [.beautifyObjects])
     Task {
       do {
         let capturedRoom = try await roomBuilder.capturedRoom(from: data)
         self.capturedRooms.append(capturedRoom)
-        // If finishing, emit preview now that the processed room exists
-        if self.pendingFinish && !self.previewEmitted {
-          self.onPreview([:])
-          self.previewEmitted = true
-          // If requested, export right after preview
-          if self.exportOnFinish {
-            self.exportResults()
-          }
-          self.pendingFinish = false
-        }
-        // If an export was queued, export now
-        if self.pendingExport {
-          self.pendingExport = false
-          self.exportResults()
-        } else {
-          self.sendStatus(.OK)
-        }
+        self.handleRoomReady()
       } catch {
         self.sendError("Failed to build captured room: \(error.localizedDescription)")
       }
@@ -163,13 +201,11 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
   func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool {
     return true
   }
-  
+
   func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
-    // RoomPlan presented its own preview UI; notify JS once
-    if !previewEmitted {
-      onPreview([:])
-      previewEmitted = true
-    }
+    // Only reachable on iOS 16, where roomCaptureView.delegate is assigned.
+    finalRoom = processedResult
+    handleRoomReady()
   }
 
   // MARK: - Export
@@ -182,8 +218,6 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
 
     Task {
       do {
-        let structure = try await structureBuilder.capturedStructure(from: capturedRooms)
-
         try FileManager.default.createDirectory(at: destinationFolderURL, withIntermediateDirectories: true)
 
         var finalExportType = CapturedRoom.USDExportOptions.parametric
@@ -191,9 +225,24 @@ class RoomPlanCaptureUIView: ExpoView, RoomCaptureSessionDelegate, RoomCaptureVi
         if exportType == "MODEL" { finalExportType = .model }
 
         let jsonEncoder = JSONEncoder()
-        let jsonData = try jsonEncoder.encode(structure)
-        try jsonData.write(to: capturedRoomURL)
-        try structure.export(to: destinationURL, exportOptions: finalExportType)
+
+        if #available(iOS 17.0, *) {
+          let structure = try await structureBuilder.capturedStructure(from: capturedRooms)
+          let jsonData = try jsonEncoder.encode(structure)
+          try jsonData.write(to: capturedRoomURL)
+          try structure.export(to: destinationURL, exportOptions: finalExportType)
+        } else {
+          guard let room = finalRoom else {
+            throw NSError(
+              domain: "ExpoRoomPlan",
+              code: 1,
+              userInfo: [NSLocalizedDescriptionKey: "No captured room available to export."]
+            )
+          }
+          let jsonData = try jsonEncoder.encode(room)
+          try jsonData.write(to: capturedRoomURL)
+          try room.export(to: destinationURL, exportOptions: finalExportType)
+        }
 
         if sendFileLoc {
           self.onExported([
