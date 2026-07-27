@@ -366,6 +366,15 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
                 let jsonEncoder = JSONEncoder()
 
                 if #available(iOS 17.0, *) {
+                    guard !capturedRoomArray.isEmpty else {
+                        throw NSError(
+                            domain: "ExpoRoomPlan",
+                            code: 2,
+                            userInfo: [
+                                NSLocalizedDescriptionKey: "No rooms were successfully captured. Try scanning again, covering more of the walls and floor before finishing."
+                            ]
+                        )
+                    }
                     finalStructure = try await structureBuilder.capturedStructure(
                         from: capturedRoomArray
                     )
@@ -427,19 +436,19 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
             } catch {
                 print("[RoomPlan] ERROR MERGING")
                 print("[RoomPlan] Error = \(error)")
-                self.sendScanResultAndDismiss(status: .Error)
+                self.sendScanResultAndDismiss(status: .Error, errorMessage: error.localizedDescription)
                 return
             }
         }
     }
 
-    func sendScanResultAndDismiss(status: ScanStatus? = nil, scanUrl: String? = nil, jsonUrl: String? = nil) {
+    func sendScanResultAndDismiss(status: ScanStatus? = nil, scanUrl: String? = nil, jsonUrl: String? = nil, errorMessage: String? = nil) {
         var eventData: [String: Any] = [:]
-        
+
         if let status = status {
             eventData["status"] = status.rawValue
         }
-        
+
         if let jsonUrl = jsonUrl {
             eventData["jsonUrl"] = jsonUrl
         }
@@ -447,7 +456,11 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
         if let scanUrl = scanUrl {
             eventData["scanUrl"] = scanUrl
         }
-        
+
+        if let errorMessage = errorMessage {
+            eventData["errorMessage"] = errorMessage
+        }
+
         // Send the unified event
         onDismiss?(eventData)
         
@@ -588,17 +601,21 @@ extension RoomPlanCaptureViewController {
         didEndWith: CapturedRoomData,
         error: (any Error)?
     ) {
+        if let error {
+            print("[RoomPlan] Session ended with error: \(error.localizedDescription)")
+        }
         print("[RoomPlan] didEndWith")
         let roomBuilder = RoomBuilder(options: [.beautifyObjects])
         isBuildingRoom = true
         Task {
-            if let capturedRoom = try? await roomBuilder.capturedRoom(
-                from: didEndWith
-            ) {
+            do {
+                let capturedRoom = try await roomBuilder.capturedRoom(
+                    from: didEndWith
+                )
                 print("[RoomPlan] Appending new captured room")
                 self.capturedRoomArray.append(capturedRoom)
-            } else {
-                print("[RoomPlan] Failed to build captured room.")
+            } catch {
+                print("[RoomPlan] Failed to build captured room: \(error.localizedDescription)")
             }
             await MainActor.run {
                 self.isBuildingRoom = false

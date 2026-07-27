@@ -16,11 +16,17 @@ export default function useRoomPlan(
   );
   const [scanUrl, setScanUrl] = useState<null | string>(null);
   const [jsonUrl, setJsonUrl] = useState<null | string>(null);
+  const [errorMessage, setErrorMessage] = useState<null | string>(null);
 
   useEffect(() => {
     const sub = ExpoRoomPlan.addListener?.(
       "onDismissEvent",
-      (event: { status: ScanStatus; scanUrl?: string; jsonUrl?: string }) => {
+      (event: {
+        status: ScanStatus;
+        scanUrl?: string;
+        jsonUrl?: string;
+        errorMessage?: string;
+      }) => {
         setRoomScanStatus(event.status);
         console.log("RoomScan status: ", event.status);
         if (event.scanUrl) {
@@ -30,6 +36,10 @@ export default function useRoomPlan(
         if (event.jsonUrl) {
           setJsonUrl(event.jsonUrl);
           console.log("JSON URL: ", event.jsonUrl);
+        }
+        if (event.errorMessage) {
+          setErrorMessage(event.errorMessage);
+          console.log("RoomScan error: ", event.errorMessage);
         }
       }
     );
@@ -60,5 +70,6 @@ export default function useRoomPlan(
     roomScanStatus,
     scanUrl,
     jsonUrl,
+    errorMessage,
   };
 }

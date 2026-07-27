@@ -29,4 +29,5 @@ export interface UseRoomPlanInterface {
   roomScanStatus: ScanStatus;
   jsonUrl: string | null;
   scanUrl: string | null;
+  errorMessage: string | null;
 }
