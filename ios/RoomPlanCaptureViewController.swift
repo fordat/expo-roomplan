@@ -515,7 +515,12 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
 
     @objc
     public func stopSession() {
+        // A didEndWith callback (and its RoomBuilder Task) is guaranteed to follow
+        // this stop() call, so mark the build as in-flight now rather than waiting
+        // for didEndWith to fire — otherwise a fast export tap can race the gap
+        // between calling stop() and the delegate callback actually arriving.
         if #available(iOS 17.0, *) {
+            isBuildingRoom = true
             roomCaptureView?.captureSession.stop(pauseARSession: false)
         } else {
             roomCaptureView?.captureSession.stop()
