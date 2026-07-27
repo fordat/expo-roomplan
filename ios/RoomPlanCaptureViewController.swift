@@ -316,7 +316,20 @@ class RoomPlanCaptureViewController: UIViewController, RoomCaptureViewDelegate,
                 // Last room's RoomBuilder Task hasn't finished appending to
                 // capturedRoomArray yet; defer export until it does instead of
                 // racing it and handing StructureBuilder an incomplete array.
+                print("[RoomPlan] Room build still in flight; deferring export.")
                 self.pendingExportAfterBuild = true
+                // Safety net: if didEndWith/RoomBuilder never completes (or takes
+                // far longer than expected), don't hang forever with no feedback.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                    guard self.pendingExportAfterBuild else { return }
+                    self.pendingExportAfterBuild = false
+                    self.isBuildingRoom = false
+                    print("[RoomPlan] Timed out waiting for room data to finish processing.")
+                    self.sendScanResultAndDismiss(
+                        status: .Error,
+                        errorMessage: "Timed out waiting for the scan to finish processing."
+                    )
+                }
             } else {
                 self.exportResults()
             }
@@ -600,7 +613,17 @@ extension RoomPlanCaptureViewController {
     {
         print("[RoomPlan] didChange", didChange.objects.count)
     }
+}
 
+@available(iOS 16.0, *)
+extension RoomPlanCaptureViewController {
+    // captureSession(_:didEndWith:error:) is a base RoomCaptureSessionDelegate
+    // requirement present since iOS 16 (unlike didUpdate/didChange above, which
+    // are iOS 17+ additions for multi-room support). It must live at the same
+    // availability floor as the class's own protocol conformance — nesting it
+    // inside an @available(iOS 17.0, *) extension left it mismatched with the
+    // class's iOS 16 floor, which meant it was never wired up as the delegate
+    // callback at all and silently never fired.
     func captureSession(
         _ session: RoomCaptureSession,
         didEndWith: CapturedRoomData,
@@ -610,6 +633,7 @@ extension RoomPlanCaptureViewController {
             print("[RoomPlan] Session ended with error: \(error.localizedDescription)")
         }
         print("[RoomPlan] didEndWith")
+        guard #available(iOS 17.0, *) else { return }
         let roomBuilder = RoomBuilder(options: [.beautifyObjects])
         isBuildingRoom = true
         Task {
@@ -631,10 +655,7 @@ extension RoomPlanCaptureViewController {
             }
         }
     }
-}
 
-@available(iOS 16.0, *)
-extension RoomPlanCaptureViewController {
     func captureView(
         shouldPresent roomDataForProcessing: CapturedRoomData,
         error: Error?
