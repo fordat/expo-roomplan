@@ -9,7 +9,7 @@ class ExpoRoomPlanViewModule : Module() {
     Name("ExpoRoomPlanView")
 
     // Register a View factory. The View itself will throw on Android.
-    View(::RoomPlanView) {
+    View(RoomPlanView::class) {
       // Mirror props to satisfy the JS/TS surface. They are no-ops here.
       Prop("scanName") { _: RoomPlanView, _: String? -> }
       Prop("exportType") { _: RoomPlanView, _: String? -> }
