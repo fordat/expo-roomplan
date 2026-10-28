@@ -14,7 +14,6 @@ Read more about it here: [Apple - RoomPlan](https://developer.apple.com/augmente
 
 - [useRoomPlan](#useroomplan) - get up and running quickly with a pre-built view controller.
 
-
 ## useRoomPlan
 
 The simplest way to use this package is with the `useRoomPlan` hook:
@@ -395,6 +394,13 @@ Only compatible with iOS 16.0 or higher.
 ### Configure for iOS
 
 Requires iOS 16.0 or higher. Multi-room capture (merging several scans into one structure via "add another room") requires iOS 17.0+; on iOS 16 devices, capture is limited to a single room per session.
+
+Add a camera usage description to the `<dict>` block of `ios/<projectName>/Info.plist`. If this is missing, the app will crash immediately when trying to access the camera.
+
+```
+<key>NSCameraUsageDescription</key>
+<string>We require access to your camera to scan your room.</string>
+```
 
 Run `npx pod-install` after installing the npm package.
 
