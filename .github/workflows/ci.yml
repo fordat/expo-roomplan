@@ -37,7 +37,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: example/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            example/package-lock.json
+
+      # The example depends on this package via "file:..", which makes npm run
+      # the package's `prepare` script, which needs the root devDependencies.
+      - name: Install package dependencies
+        run: npm ci
 
       - name: Install example dependencies
         working-directory: example
