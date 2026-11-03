@@ -1,5 +1,6 @@
 import ExpoModulesCore
 import UIKit
+import RoomPlan
 
 @available(iOS 16.0, *)
 public class ExpoRoomPlanModule: Module {
