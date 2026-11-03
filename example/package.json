@@ -31,7 +31,8 @@
             "ios": {
               "podspecPath": "../ios/ExpoRoomplan.podspec",
               "modules": [
-                "ExpoRoomplanModule"
+                "ExpoRoomPlanModule",
+                "ExpoRoomPlanViewModule"
               ]
             }
           }

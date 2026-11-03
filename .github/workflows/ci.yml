@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-js:
+    name: Build TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # expo-module build runs tsc once (no watch) when CI is set, which GitHub does.
+      - run: npm run build
+
+  build-ios:
+    name: Build iOS example app
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            example/package-lock.json
+
+      # The example depends on this package via "file:..", which makes npm run
+      # the package's `prepare` script, which needs the root devDependencies.
+      - name: Install package dependencies
+        run: npm ci
+
+      - name: Install example dependencies
+        working-directory: example
+        run: npm ci
+
+      - name: Cache Pods
+        uses: actions/cache@v4
+        with:
+          path: example/ios/Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('example/ios/Podfile.lock', 'example/package-lock.json') }}
+          restore-keys: pods-${{ runner.os }}-
+
+      - name: Install pods
+        working-directory: example/ios
+        run: pod install
+
+      # Builds for a generic device (not the simulator) with signing disabled,
+      # so no Apple developer certificate is needed. SKIP_BUNDLING skips the
+      # JS bundle step, since this job only checks that the native code compiles.
+      - name: Build
+        working-directory: example/ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace exporoomplanexample.xcworkspace \
+            -scheme exporoomplanexample \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            SKIP_BUNDLING=1 \
+            build | xcbeautify --renderer github-actions
