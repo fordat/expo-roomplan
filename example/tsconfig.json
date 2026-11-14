@@ -3,8 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "expo-roomplan": ["../src/index"],
-      "expo-roomplan/*": ["../src/*"]
+      "@/*": ["./src/*"],
+      "expo-roomplan": ["../src/index"]
     }
-  }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
 }

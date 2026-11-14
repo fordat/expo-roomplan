@@ -20,11 +20,24 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            example/package-lock.json
 
       - run: npm ci
 
+      - run: npm run lint
+
       # expo-module build runs tsc once (no watch) when CI is set, which GitHub does.
       - run: npm run build
+
+      - name: Install example dependencies
+        working-directory: example
+        run: npm ci
+
+      - name: Typecheck example
+        working-directory: example
+        run: npm run typecheck
 
   build-ios:
     name: Build iOS example app
@@ -50,11 +63,18 @@ jobs:
         working-directory: example
         run: npm ci
 
+      # The example uses Continuous Native Generation: ios/ isn't committed, so
+      # generate it from app.json + config plugins. Runs before the Pods cache
+      # restore because --clean would delete a restored ios/Pods.
+      - name: Generate iOS project
+        working-directory: example
+        run: npx expo prebuild --platform ios --no-install --clean
+
       - name: Cache Pods
         uses: actions/cache@v4
         with:
           path: example/ios/Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('example/ios/Podfile.lock', 'example/package-lock.json') }}
+          key: pods-${{ runner.os }}-${{ hashFiles('example/package-lock.json', 'example/app.json', 'ios/ExpoRoomplan.podspec') }}
           restore-keys: pods-${{ runner.os }}-
 
       - name: Install pods

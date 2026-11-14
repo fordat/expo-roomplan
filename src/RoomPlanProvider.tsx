@@ -1,4 +1,4 @@
-import React, { createContext, useContext, PropsWithChildren } from "react";
+import { createContext, useContext, type PropsWithChildren } from "react";
 import { RoomPlanView } from "./RoomPlanView";
 import type { RoomPlanViewProps } from "./ExpoRoomplanView.types";
 import type {
