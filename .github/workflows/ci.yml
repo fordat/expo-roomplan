@@ -41,10 +41,13 @@ jobs:
 
   build-ios:
     name: Build iOS example app
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
 
       - uses: actions/setup-node@v4
         with:
@@ -74,8 +77,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: example/ios/Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('example/package-lock.json', 'example/app.json', 'ios/ExpoRoomplan.podspec') }}
-          restore-keys: pods-${{ runner.os }}-
+          key: pods-macos-26-${{ hashFiles('example/package-lock.json', 'example/app.json', 'ios/ExpoRoomplan.podspec') }}
+          restore-keys: pods-macos-26-
 
       - name: Install pods
         working-directory: example/ios
@@ -84,6 +87,8 @@ jobs:
       # Builds for a generic device (not the simulator) with signing disabled,
       # so no Apple developer certificate is needed. SKIP_BUNDLING skips the
       # JS bundle step, since this job only checks that the native code compiles.
+      # The raw log is kept because xcbeautify drops some errors (e.g. Swift
+      # Package Manager resolution failures).
       - name: Build
         working-directory: example/ios
         run: |
@@ -96,4 +101,9 @@ jobs:
             -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO \
             SKIP_BUNDLING=1 \
-            build | xcbeautify --renderer github-actions
+            build | tee xcodebuild.log | xcbeautify --renderer github-actions
+
+      - name: Show xcodebuild errors
+        if: failure()
+        working-directory: example/ios
+        run: grep -n -B2 -A12 -E "error:|Could not resolve" xcodebuild.log | tail -200 || true

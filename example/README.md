@@ -10,7 +10,7 @@ One app showing the three ways to use expo-roomplan:
 
 ## Requirements
 
-- macOS with Xcode
+- macOS with Xcode 26 or newer (Expo SDK 58's Swift packages need Swift 6.2)
 - A LiDAR device (iPhone 12 Pro or newer, recent iPad Pro) on **iOS 16+**. Multi-room capture ("Add another room") needs **iOS 17+**.
 - The simulator can open the app, but it can't scan.
 - Expo Go can't load native modules. This runs as a development build.
