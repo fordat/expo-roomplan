@@ -364,7 +364,33 @@ Exports
 
 # Installation in managed Expo projects
 
-For a step-by-step guide on using this library in a managed Expo app (including privacy manifests and the config plugin), see the tutorial [here](./example-managed/README.md).
+RoomPlan is a native module, so it needs a [development build](https://docs.expo.dev/develop/development-builds/introduction/); it won't load in Expo Go.
+
+```sh
+npx expo install expo-roomplan
+```
+
+Add the config plugin to `app.json`. It sets `NSCameraUsageDescription` (optionally with your own text). RoomPlan needs iOS 16+, so also set the deployment target with `expo-build-properties` (`npx expo install expo-build-properties`):
+
+```json
+{
+  "expo": {
+    "plugins": [
+      ["expo-roomplan", { "cameraPermissionText": "Allow camera access to scan rooms." }],
+      ["expo-build-properties", { "ios": { "deploymentTarget": "16.0" } }]
+    ]
+  }
+}
+```
+
+Then build:
+
+```sh
+npx expo prebuild -p ios
+npx expo run:ios --device
+```
+
+The [example app](./example) is set up this way and also shows the `ios.privacyManifests` config Apple requires for App Store submission. See [example/README.md](./example/README.md) for the full walkthrough and troubleshooting.
 
 # Installation in bare React Native projects
 
@@ -410,4 +436,4 @@ Contributions are very welcome! Please refer to guidelines described in the [con
 
 ### Development Notes
 
-Replace `YOUR_TEAM_ID` with a real development team in the example project.
+The [example app](./example) runs against the library's `src/` directly, so JS/TS changes hot-reload without `npm run build`. Native (Swift) changes need a rebuild with `npx expo run:ios`. Its `ios/` folder is generated, so run `npx expo prebuild -p ios` in `example/` before `npm run open:ios`.

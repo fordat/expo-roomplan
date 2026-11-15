@@ -11,6 +11,9 @@ __tests__
 /android/src/androidTest/
 /android/src/test/
 /android/build/
+/android/.gradle/
 /example/
-/example-managed/
+/oxlint.config.mjs
 /src/
+/.tsbuildinfo
+

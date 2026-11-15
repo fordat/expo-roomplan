@@ -1,34 +1,41 @@
-// Learn more https://docs.expo.io/guides/customizing-metro
-const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
+// Metro config for running the example against the library source in `..`.
+//
+// - `expo-roomplan` resolves straight to ../src, so library edits hot-reload
+//   without running `npm run build` first.
+// - The repo root has its own copies of react, react-native and expo (dev
+//   dependencies of the library). They're blocked so imports from ../src fall
+//   through to this app's node_modules; resolving both copies causes
+//   "Invalid hook call" and duplicate native module errors.
+const path = require("path");
+const { getDefaultConfig } = require("expo/metro-config");
 
-const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+const libraryRoot = path.resolve(projectRoot, "..");
 
-// npm v7+ will install ../node_modules/react and ../node_modules/react-native because of peerDependencies.
-// To prevent the incompatible react-native between ./node_modules/react-native and ../node_modules/react-native,
-// excludes the one from the parent folder when bundling.
+const config = getDefaultConfig(projectRoot);
+
+config.watchFolders = [libraryRoot];
+
+config.resolver.nodeModulesPaths = [path.resolve(projectRoot, "node_modules")];
+
+const escape = (p) => p.replace(/[/\\]/g, "[/\\\\]").replace(/\./g, "\\.");
 config.resolver.blockList = [
   ...Array.from(config.resolver.blockList ?? []),
-  new RegExp(path.resolve('..', 'node_modules', 'react')),
-  new RegExp(path.resolve('..', 'node_modules', 'react-native')),
+  new RegExp(`^${escape(path.join(libraryRoot, "node_modules"))}[/\\\\].*`),
+  new RegExp(`^${escape(path.join(libraryRoot, "build"))}[/\\\\].*`),
 ];
 
-config.resolver.nodeModulesPaths = [
-  path.resolve(__dirname, './node_modules'),
-  path.resolve(__dirname, '../node_modules'),
-];
-
-config.resolver.extraNodeModules = {
-  'expo-roomplan': '..',
+const librarySource = path.join(libraryRoot, "src", "index.ts");
+const defaultResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === "expo-roomplan") {
+    return { type: "sourceFile", filePath: librarySource };
+  }
+  return (defaultResolveRequest ?? context.resolveRequest)(
+    context,
+    moduleName,
+    platform
+  );
 };
-
-config.watchFolders = [path.resolve(__dirname, '..')];
-
-config.transformer.getTransformOptions = async () => ({
-  transform: {
-    experimentalImportSupport: false,
-    inlineRequires: true,
-  },
-});
 
 module.exports = config;
